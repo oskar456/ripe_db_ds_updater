@@ -95,11 +95,13 @@ def put_object_to_ripe_db(obj, password, dry_run=True):
         params["dry-run"] = True
     headers = {"Accept": "application/json", }
     r = requests.put(uri, json=json, params=params, headers=headers).json()
-    return r
-    # yield from glom(r, "objects.object")
+    if "errormessages" in r:
+        for e in glom(r, "errormessages.errormessage"):
+            print(f"{e['severity']}: {e['text']}")
+    return glom(r, "objects.object")[0]
 
 
-def process_cds_records(obj):
+def process_cds_records(obj, dry_run=True):
     domain = get_single_attr(obj, "domain")
     print(f"Domain: {domain}")
     lm = get_single_attr(obj, "last-modified")
@@ -132,7 +134,6 @@ def process_cds_records(obj):
         assert inception > lm, "Signature inception too early"
         if dns_ds_rdataset and dns_ds_rdataset != ripe_ds_rdataset:
             delete_ds_rdata(obj)
-            print("deleting DS data")
             if not (
                 len(a) == 1 and  # Special Delete DS record
                 a[0].key_tag == 0 and
@@ -141,10 +142,8 @@ def process_cds_records(obj):
                 a[0].digest == b'\x00'
             ):
                 append_ds_rdata(obj, dns_ds_rdataset)
-                print("appending new data")
             print("updating DB record")
-            print_rpsl_object(obj)
-            put_object_to_ripe_db(obj, c.UPDATER_PW)
+            put_object_to_ripe_db(obj, c.UPDATER_PW, dry_run=dry_run)
 
     except dns.exception.DNSException as e:
         print(f"DNS exception: {e}")
@@ -152,9 +151,9 @@ def process_cds_records(obj):
         print(f"Assertion error: {e}")
 
 
-def main():
+def main(dry_run=True):
     for d in get_maintained_domains(c.UPDATER_MNT):
-        process_cds_records(d)
+        process_cds_records(d, dry_run)
 
 
 if __name__ == "__main__":
