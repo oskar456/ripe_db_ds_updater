@@ -129,8 +129,8 @@ def process_cds_records(obj, dry_run=True):
         dns_ds_rdataset = {rd.to_text() for rd in a}
         ripe_ds_rdataset = set(get_attrs(obj, "ds-rdata"))
         print(f"Inception: {inception}, last modified: {lm}")
-        print(f"DNS  rdataset: {dns_ds_rdataset}")
         print(f"RIPE rdataset: {ripe_ds_rdataset}")
+        print(f"DNS  rdataset: {dns_ds_rdataset}")
         assert inception > lm, "Signature inception too early"
         if dns_ds_rdataset and dns_ds_rdataset != ripe_ds_rdataset:
             delete_ds_rdata(obj)
@@ -143,7 +143,8 @@ def process_cds_records(obj, dry_run=True):
             ):
                 append_ds_rdata(obj, dns_ds_rdataset)
             print("updating DB record")
-            put_object_to_ripe_db(obj, c.UPDATER_PW, dry_run=dry_run)
+            o = put_object_to_ripe_db(obj, c.UPDATER_PW, dry_run=dry_run)
+            print_rpsl_object(o)
 
     except dns.exception.DNSException as e:
         print(f"DNS exception: {e}")
