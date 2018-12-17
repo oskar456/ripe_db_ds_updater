@@ -110,7 +110,7 @@ def process_cds_records(obj, dry_run=True):
 
     resolver = dns.resolver.Resolver()
     resolver.set_flags(dns.flags.RD | dns.flags.AD)
-    resolver.use_edns(0, dns.flags.DO, 0)
+    resolver.use_edns(0, dns.flags.DO, 512)
     try:
         a = resolver.query(domain + ".", "CDS")
         assert a.response.rcode() == 0, "DNS response failure"
