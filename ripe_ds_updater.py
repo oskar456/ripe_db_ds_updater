@@ -107,6 +107,8 @@ def process_cds_records(obj, dry_run=True):
     lm = get_single_attr(obj, "last-modified")
     lm = datetime.datetime.strptime(lm, "%Y-%m-%dT%H:%M:%SZ")
     lm = lm.replace(tzinfo=datetime.timezone.utc)
+    ripe_ds_rdataset = set(get_attrs(obj, "ds-rdata"))
+    print(f"RIPE rdataset: {ripe_ds_rdataset}")
 
     resolver = dns.resolver.Resolver()
     resolver.set_flags(dns.flags.RD | dns.flags.AD)
@@ -127,10 +129,8 @@ def process_cds_records(obj, dry_run=True):
             datetime.timezone.utc,
         )
         dns_ds_rdataset = {rd.to_text() for rd in a}
-        ripe_ds_rdataset = set(get_attrs(obj, "ds-rdata"))
-        print(f"Inception: {inception}, last modified: {lm}")
-        print(f"RIPE rdataset: {ripe_ds_rdataset}")
         print(f"DNS  rdataset: {dns_ds_rdataset}")
+        print(f"Inception: {inception}, last modified: {lm}")
         assert inception > lm, "Signature inception too early"
         if dns_ds_rdataset and dns_ds_rdataset != ripe_ds_rdataset:
             delete_ds_rdata(obj)
