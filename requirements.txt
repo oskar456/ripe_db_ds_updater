@@ -7,4 +7,4 @@ face==19.1.1
 glom==19.2.0
 idna==2.8
 requests==2.21.0
-urllib3==1.24.2
+urllib3==1.26.5
